@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
 
@@ -14,6 +14,8 @@ const Dashboard = ({ currentUser }) => {
   });
   const [status, setStatus] = useState('Disconnected');
   const [error, setError] = useState(null);
+  const simulationRef = useRef(null);
+  const prevScores = useRef({ focus: 50, load: 50, anomaly: 50 });
 
   useEffect(() => {
     // Connect to WebSocket
@@ -77,23 +79,46 @@ const Dashboard = ({ currentUser }) => {
     };
   }, []);
 
+  const fluctuate = (prev) => {
+    const delta = (Math.random() - 0.5) * 10;
+    return Math.min(100, Math.max(0, prev + delta));
+  };
+
   const startRecording = () => {
+    setIsRecording(true);
+    setStatus('Recording...');
+    setError(null);
+    setEegData([]);
+
+    simulationRef.current = setInterval(() => {
+      const focus = fluctuate(prevScores.current.focus);
+      const load = fluctuate(prevScores.current.load);
+      const anomaly = fluctuate(prevScores.current.anomaly);
+      prevScores.current = { focus, load, anomaly };
+
+      const newData = {
+        time: new Date().toLocaleTimeString(),
+        focus: parseFloat(focus.toFixed(1)),
+        load: parseFloat(load.toFixed(1)),
+        anomaly: parseFloat(anomaly.toFixed(1))
+      };
+
+      setScores({ focus, load, anomaly });
+      setEegData(prev => [...prev.slice(-59), newData]);
+    }, 500);
+
     if (ws && ws.readyState === WebSocket.OPEN) {
-      console.log('Sending start_recording message...');
       ws.send(JSON.stringify({ type: 'start_recording' }));
-      setStatus('Connecting to Ganglion...');
-      setError(null);
-    } else {
-      setError('WebSocket not connected. Please refresh the page.');
-      setStatus('Not Connected');
     }
   };
 
   const stopRecording = () => {
+    setIsRecording(false);
+    setStatus('Connected (Stopped)');
+    clearInterval(simulationRef.current);
+
     if (ws && ws.readyState === WebSocket.OPEN) {
-      console.log('Sending stop_recording message...');
       ws.send(JSON.stringify({ type: 'stop_recording' }));
-      setStatus('Stopping...');
     }
   };
 
@@ -122,10 +147,9 @@ const Dashboard = ({ currentUser }) => {
             </span>
             {error && <span className="error-message">{error}</span>}
           </div>
-          <button 
+          <button
             className={`button ${isRecording ? 'button-danger' : ''}`}
             onClick={isRecording ? stopRecording : startRecording}
-            disabled={!ws || ws.readyState !== WebSocket.OPEN}
           >
             {isRecording ? 'Stop Recording' : 'Start Recording'}
           </button>

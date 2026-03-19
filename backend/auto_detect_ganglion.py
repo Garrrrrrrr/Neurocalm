@@ -68,7 +68,6 @@ def auto_detect_ganglion():
     dongle_ports = find_ble_dongle_ports()
     
     if not dongle_ports:
-        print("No BLE dongle found. Checking USB ports...")
         # Try all USB ports
         all_usb = glob.glob("/dev/tty.*")
         dongle_ports = [p for p in all_usb if 'usb' in p.lower() or 'serial' in p.lower()]

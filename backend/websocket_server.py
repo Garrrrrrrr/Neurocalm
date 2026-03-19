@@ -161,13 +161,6 @@ class WebSocketServer:
                                     }))
                                     return
                             else:
-                                error_msg = (
-                                    "No BLE dongle found. Please:\n"
-                                    "1. Plug in your BLE dongle\n"
-                                    "2. Set GANGLION_DONGLE_PORT in .env\n"
-                                    "3. Or run 'python -m backend.auto_detect_ganglion'"
-                                )
-                                print(f"ERROR: {error_msg}")
                                 await websocket.send(json.dumps({
                                     "type": "error",
                                     "message": error_msg

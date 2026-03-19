@@ -153,6 +153,12 @@ Connect to `ws://localhost:8765`:
 - Export data for research purposes
 - Multi-user support with authentication
 
+![Render Output](images/ncalm1.png)
+![Render Output](images/ncalm2.png)
+![Render Output](images/ncalm3.png)
+![Render Output](images/ncalm4.png)
+
+
 ## License
 
 See LICENSE file for details.
